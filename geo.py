@@ -2,17 +2,15 @@ import urllib2
 import json
 import sys
 import csv
-
-inp = open(str(sys.argv[1]), 'rb')
-csvinput = csv.reader(inp, delimiter=',', quotechar='"')
-col = csvinput.next().index("address")
-
+import time
 def processAddress(address):
 	formadd = address.replace(" ", "%20")
 	r = urllib2.urlopen("http://maps.googleapis.com/maps/api/geocode/json?address="+formadd+"&sensor=false")
 	
 	res = json.load(r)['results']
-	
+	if len(res) == 0: 
+		return json.load(r)
+
 	lng = str(res[0]['geometry']['location']["lng"])
 	lat = str(res[0]['geometry']['location']["lat"])
 	nam = ""
@@ -22,5 +20,10 @@ def processAddress(address):
 		nam = res[0]["address_components"][0]["long_name"]
 	return lng + ", " + lat + ", " + nam + ', "' + address + '"'
 
-for row in csvinput:
-	print processAddress(row[col])
+csvinput = csv.reader(open(str(sys.argv[1]), 'rb'), delimiter=',', quotechar='"')
+colIndex = csvinput.next().index("address")
+
+allRows = (row for row in csvinput)
+for row in allRows:
+	print processAddress(row[colIndex])
+	time.sleep(.1)
